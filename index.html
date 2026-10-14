@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A3: Servicios Web SOAP y REST - Laboratorio Interactivo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        },
+                        soap: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        },
+                        rest: {
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        code, pre { font-family: 'Fira Code', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.5); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.8); }
+        
+        /* Syntax highlighting simple themes */
+        .token-keyword { color: #f43f5e; font-weight: 600; }
+        .token-tag { color: #3b82f6; font-weight: 600; }
+        .token-attr { color: #a855f7; }
+        .token-string { color: #10b981; }
+        .token-key { color: #38bdf8; }
+        .token-number { color: #f59e0b; }
+        .token-comment { color: #64748b; font-style: italic; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-slate-800/90 border-b border-slate-700/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <!-- Brand / Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-brand-600 to-indigo-500 text-white p-2.5 rounded-xl shadow-lg shadow-brand-500/20">
+                    <i class="fa-solid me-0 fa-network-wired text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        A3. Servicios Web SOAP y REST
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Descripción, Estructura, Esquemas y Validación</p>
+                </div>
+            </div>
+
+            <!-- Global Progress Indicator & Controls -->
+            <div class="flex items-center space-x-4">
+                <div class="hidden sm:flex flex-col items-end">
+                    <span class="text-xs text-slate-400">Progreso de la Actividad</span>
+                    <div class="w-32 bg-slate-700 rounded-full h-2 mt-1 overflow-hidden">
+                        <div id="global-progress" class="bg-gradient-to-r from-brand-500 to-emerald-400 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <button id="theme-toggle" class="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Cambiar Tema">
+                    <i class="fa-solid fa-moon text-lg" id="theme-icon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Controls -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-700/50">
+            <nav class="flex space-x-2 sm:space-x-8 overflow-x-auto custom-scrollbar py-2 text-sm font-medium">
+                <button onclick="switchTab('theory')" id="tab-theory" class="tab-btn active px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition flex items-center space-x-2 border-b-2 border-transparent">
+                    <i class="fa-solid fa-book text-brand-500"></i>
+                    <span>1. Módulo Teórico</span>
+                </button>
+                <button onclick="switchTab('sandbox')" id="tab-sandbox" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition flex items-center space-x-2 border-b-2 border-transparent">
+                    <i class="fa-solid fa-flask text-emerald-400"></i>
+                    <span>2. Laboratorio Sandbox</span>
+                </button>
+                <button onclick="switchTab('exercises')" id="tab-exercises" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition flex items-center space-x-2 border-b-2 border-transparent">
+                    <i class="fa-solid fa-puzzle-piece text-amber-400"></i>
+                    <span>3. Ejercicios Prácticos</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-700/50 transition flex items-center space-x-2 border-b-2 border-transparent">
+                    <i class="fa-solid fa-graduation-cap text-purple-400"></i>
+                    <span>4. Autoevaluación (10 P)</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- ================= TAB 1: MÓDULO TEÓRICO ================= -->
+        <section id="content-theory" class="tab-content space-y-8">
+            
+            <!-- Intro Hero Banner -->
+            <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-brand-900/40 p-6 rounded-2xl border border-slate-700/80 shadow-xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <span class="px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-brand-500/20 text-brand-400 rounded-full border border-brand-500/30">Módulo 1</span>
+                    <h2 class="text-2xl font-bold mt-2 text-white">Fundamentos de Interoperabilidad y Arquitectura Web</h2>
+                    <p class="text-slate-300 text-sm mt-1 max-wide-2xl">
+                        Aprende cómo los sistemas heterogéneos comunican datos sin fisuras utilizando contratos formales, esquemas rígidos en SOAP o flexibles en REST.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section 1: Interoperabilidad & Necesidad de Descripción -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-slate-600 transition">
+                    <div class="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <h3 class="font-semibold text-base text-slate-100">1. Evitar Ambigüedades</h3>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Sin un contrato formal (WSDL o OpenAPI), el cliente desconoce qué parámetros enviar, sus tipos de datos (enteros, cadenas, fechas) y el formato exacto de respuesta.
+                    </p>
+                </div>
+
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-slate-600 transition">
+                    <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="font-semibold text-base text-slate-100">2. Garantizar Coherencia</h3>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Pequeñas diferencias (p. ej., formato <code class="text-amber-300">DD/MM/YYYY</code> vs <code class="text-amber-300">YYYY-MM-DD</code>) ocasionan fallos graves de parsing y errores en la lógica de negocio.
+                    </p>
+                </div>
+
+                <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 hover:border-slate-600 transition">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-3">
+                        <i class="fa-solid fa-link-slash"></i>
+                    </div>
+                    <h3 class="font-semibold text-base text-slate-100">3. Reducir Acoplamiento</h3>
+                    <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                        Permite establecer un acuerdo formal cliente-servidor independientemente de documentaciones informales propensas a quedar obsoletas.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section 2: Interactive Comparison Table -->
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+                <div class="p-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-scale-balanced text-brand-400"></i>
+                            Tabla Comparativa Interactiva: SOAP vs REST
+                        </h3>
+                        <p class="text-xs text-slate-400">Pasa el cursor o haz clic en las filas para ver análisis detallados</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="px-2.5 py-1 rounded text-xs font-semibold bg-soap-500/20 text-soap-400 border border-soap-500/30">SOAP (Protocolo W3C)</span>
+                        <span class="px-2.5 py-1 rounded text-xs font-semibold bg-rest-500/20 text-rest-400 border border-rest-500/30">REST (Estilo Arquitectónico)</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-300">
+                        <thead class="bg-slate-900/60 text-xs uppercase text-slate-400 border-b border-slate-700">
+                            <tr>
+                                <th class="p-4">Criterio</th>
+                                <th class="p-4 text-soap-400">SOAP</th>
+                                <th class="p-4 text-rest-400">REST</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60">
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('nature')">
+                                <td class="p-4 font-semibold text-white">Naturaleza</td>
+                                <td class="p-4"><span class="badge-soap">Protocolo rígido / Estándar W3C</span></td>
+                                <td class="p-4"><span class="badge-rest">Estilo arquitectónico basado en principios</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('focus')">
+                                <td class="p-4 font-semibold text-white">Enfoque Principal</td>
+                                <td class="p-4">Operaciones / Acciones (RPC)</td>
+                                <td class="p-4">Recursos identificados mediante URIs</td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('format')">
+                                <td class="p-4 font-semibold text-white">Formatos de Mensaje</td>
+                                <td class="p-4 text-soap-300 font-mono text-xs">Estrictamente XML</td>
+                                <td class="p-4 text-rest-300 font-mono text-xs">Flexible (JSON, XML, HTML, Texto)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('transport')">
+                                <td class="p-4 font-semibold text-white">Transporte</td>
+                                <td class="p-4">Independiente (HTTP, SMTP, JMS, TCP)</td>
+                                <td class="p-4">Altamente acoplado / Optimizado para HTTP/S</td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('contract')">
+                                <td class="p-4 font-semibold text-white">Contrato / Descripción</td>
+                                <td class="p-4 font-mono text-xs text-purple-300">WSDL (XML)</td>
+                                <td class="p-4 font-mono text-xs text-emerald-300">OpenAPI / Swagger (YAML/JSON)</td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('validation')">
+                                <td class="p-4 font-semibold text-white">Validación de Esquemas</td>
+                                <td class="p-4 font-mono text-xs">XSD (XML Schema)</td>
+                                <td class="p-4 font-mono text-xs">JSON Schema</td>
+                            </tr>
+                            <tr class="hover:bg-slate-750 transition cursor-pointer" onclick="showComparisonDetail('state')">
+                                <td class="p-4 font-semibold text-white">Gestión de Estado</td>
+                                <td class="p-4">Stateful (con sesión) o Stateless</td>
+                                <td class="p-4 font-semibold text-emerald-400">Estrictamente Stateless (Sin estado)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal/Panel info for table detail -->
+            <div id="comparison-detail-box" class="hidden p-4 rounded-xl bg-brand-950/60 border border-brand-500/40 text-slate-200 text-sm animate-fade-in">
+                <div class="flex justify-between items-start">
+                    <h4 id="detail-title" class="font-bold text-brand-300 text-base"></h4>
+                    <button onclick="document.getElementById('comparison-detail-box').classList.add('hidden')" class="text-slate-400 hover:text-white">&times;</button>
+                </div>
+                <p id="detail-desc" class="mt-2 text-slate-300 text-xs leading-relaxed"></p>
+            </div>
+
+            <!-- Section 3: Detailed Message & Contract Structure -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- SOAP Environment -->
+                <div class="bg-slate-800 rounded-2xl border border-soap-500/30 p-6 flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-purple-400 flex items-center gap-2">
+                                <i class="fa-solid fa-cubes"></i> Entorno SOAP (XML, WSDL, XSD)
+                            </h3>
+                            <span class="text-xs bg-purple-500/20 text-purple-300 px-2.5 py-1 rounded font-mono">W3C Standard</span>
+                        </div>
+                        
+                        <div class="space-y-4 text-xs text-slate-300">
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-purple-300">&lt;Envelope&gt; (Obligatorio)</h4>
+                                <p>Elemento raíz que define el documento como mensaje SOAP.</p>
+                                <ul class="list-disc list-inside mt-1 space-y-1 text-slate-400 pl-2">
+                                    <li class="hover:text-slate-200"><strong class="text-slate-300">&lt;Header&gt;:</strong> Metadatos de control (autenticación, transacciones).</li>
+                                    <li class="hover:text-slate-200"><strong class="text-slate-300">&lt;Body&gt;:</strong> Datos principales de la llamada/respuesta o &lt;Fault&gt; si ocurre error.</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-purple-300">WSDL (Web Services Description)</h4>
+                                <p>Especificación de la interfaz mediante los elementos:</p>
+                                <div class="grid grid-cols-2 gap-2 mt-2 font-mono text-[11px]">
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">&lt;types&gt; (XSD)</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">&lt;message&gt;</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">&lt;portType&gt;</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">&lt;binding&gt;</div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-purple-300">XSD (XML Schema Definition)</h4>
+                                <p>Establece reglas de datos: tipos, cardinalidad (<code class="text-purple-300">minOccurs</code>, <code class="text-purple-300">maxOccurs</code>) y orden de elementos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REST Environment -->
+                <div class="bg-slate-800 rounded-2xl border border-emerald-500/30 p-6 flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                                <i class="fa-solid fa-cloud"></i> Entorno REST (JSON, OpenAPI, Schema)
+                            </h3>
+                            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded font-mono">HTTP Native</span>
+                        </div>
+
+                        <div class="space-y-4 text-xs text-slate-300">
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-emerald-300">Semántica HTTP Restful</h4>
+                                <ul class="list-disc list-inside space-y-1 text-slate-400 pl-2">
+                                    <li><strong class="text-emerald-400">Métodos:</strong> GET (Lectura), POST (Creación), PUT (Reemplazo), PATCH (Parcial), DELETE (Borrado).</li>
+                                    <li><strong class="text-emerald-400">Cabeceras:</strong> <code class="text-slate-200">Content-Type</code>, <code class="text-slate-200">Authorization</code>, <code class="text-slate-200">Accept</code>.</li>
+                                    <li><strong class="text-emerald-400">Cuerpo:</strong> Predominantemente JSON.</li>
+                                </ul>
+                            </div>
+
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-emerald-300">OpenAPI / Swagger (YAML/JSON)</h4>
+                                <p>Contrato de la API con componentes clave:</p>
+                                <div class="grid grid-cols-2 gap-2 mt-2 font-mono text-[11px]">
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">paths (/recurso)</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">operations (get, post)</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">parameters (query/path)</div>
+                                    <div class="bg-slate-800 p-1.5 rounded text-slate-300">responses (200, 400)</div>
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700">
+                                <h4 class="font-semibold text-white text-sm mb-1 text-emerald-300">JSON Schema</h4>
+                                <p>Valida la estructura JSON: propiedad <code class="text-emerald-300">required</code>, tipos (<code class="text-emerald-300">string</code>, <code class="text-emerald-300">integer</code>) y restricciones de rango/patrón.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Validation Flow Comparison -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-vial-circle-check text-indigo-400"></i>
+                    4. Proceso de Validación y Mecanismos de Vinculación
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-purple-500/20">
+                        <h4 class="text-purple-400 font-bold text-sm mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-lock"></i> Vinculación SOAP (Directa e Implícita)
+                        </h4>
+                        <p class="text-slate-300 mb-2">
+                            El XML incluye espacios de nombres (<code class="text-purple-300">xmlns</code>) apuntando al XSD/WSDL. El motor de SOAP intercepta la petición y la valida <strong>antes</strong> de la ejecución. Si falla, el motor genera automáticamente un código de error:
+                        </p>
+                        <div class="bg-black/50 p-2.5 rounded font-mono text-purple-300 border border-purple-500/30">
+                            &lt;soap:Fault&gt;&lt;faultcode&gt;SOAP-ENV:Client&lt;/faultcode&gt;...
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-emerald-500/20">
+                        <h4 class="text-emerald-400 font-bold text-sm mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-filter"></i> Vinculación REST (Externa mediante Middleware)
+                        </h4>
+                        <p class="text-slate-300 mb-2">
+                            La especificación OpenAPI se publica externamente. Un <em>Middleware</em> intercepta la petición JSON, la evalúa contra el JSON Schema y la rechaza si no cumple las especificaciones devolviendo:
+                        </p>
+                        <div class="bg-black/50 p-2.5 rounded font-mono text-emerald-300 border border-emerald-500/30">
+                            HTTP/1.1 400 Bad Request <br>
+                            {"error": "ValidationFailed", "details": [...]}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: LABORATORIO SANDBOX ================= -->
+        <section id="content-sandbox" class="tab-content hidden space-y-6">
+            
+            <!-- Mode Selector Switcher -->
+            <div class="flex justify-center">
+                <div class="bg-slate-800 p-1.5 rounded-xl border border-slate-700 inline-flex space-x-2">
+                    <button onclick="switchSandboxMode('soap')" id="btn-sandbox-soap" class="px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 bg-purple-600 text-white shadow">
+                        <i class="fa-solid fa-cubes"></i> Simulador SOAP / XML
+                    </button>
+                    <button onclick="switchSandboxMode('rest')" id="btn-sandbox-rest" class="px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-cloud"></i> Simulador REST / OpenAPI
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== SOAP SIMULATOR CONTAINER ===== -->
+            <div id="sandbox-soap-container" class="space-y-6">
+                <div class="bg-slate-800 rounded-2xl border border-purple-500/30 p-6 shadow-xl">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-purple-400 flex items-center gap-2">
+                                <i class="fa-solid fa-code"></i> Editor & Validador de Mensajes SOAP
+                            </h3>
+                            <p class="text-xs text-slate-400">Modifica la petición XML. Agrega/elimina campos requeridos para probar la validación contra XSD.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="loadSoapTemplate('valid')" class="px-3 py-1.5 text-xs font-semibold bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 transition">Cargar Válido</button>
+                            <button onclick="loadSoapTemplate('invalid')" class="px-3 py-1.5 text-xs font-semibold bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg border border-red-500/30 transition">Cargar con Error XSD</button>
+                            <button onclick="validateAndSendSOAP()" class="px-4 py-1.5 text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white rounded-lg shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-paper-plane"></i> Procesar Petición
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Code Input -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-semibold text-slate-300 flex justify-between">
+                                <span>Petición XML (&lt;Envelope&gt;)</span>
+                                <span class="text-purple-400 font-mono">Content-Type: text/xml</span>
+                            </label>
+                            <textarea id="soap-xml-input" rows="16" class="w-full bg-slate-950 text-purple-200 font-mono text-xs p-4 rounded-xl border border-slate-700 focus:border-purple-500 focus:outline-none custom-scrollbar leading-relaxed" spellcheck="false"></textarea>
+                        </div>
+
+                        <!-- Right Output / Response -->
+                        <div class="space-y-2 flex flex-col">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-semibold text-slate-300">Respuesta del Servidor Motor SOAP</label>
+                                <span id="soap-status-badge" class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-slate-700 text-slate-300">En espera...</span>
+                            </div>
+                            <div id="soap-response-output" class="flex-grow bg-slate-950 p-4 rounded-xl border border-slate-700 font-mono text-xs overflow-auto custom-scrollbar min-h-[300px]">
+                                <span class="text-slate-500 italic">// Haz clic en "Procesar Petición" para evaluar la estructura XML con el esquema XSD.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== REST SIMULATOR CONTAINER ===== -->
+            <div id="sandbox-rest-container" class="hidden space-y-6">
+                <div class="bg-slate-800 rounded-2xl border border-emerald-500/30 p-6 shadow-xl">
+                    <!-- Request Bar -->
+                    <div class="flex flex-col md:flex-row items-center gap-3 mb-6 bg-slate-900 p-3 rounded-xl border border-slate-700">
+                        <select id="rest-method" class="bg-slate-800 text-emerald-400 font-bold text-sm px-3 py-2 rounded-lg border border-slate-700 focus:outline-none">
+                            <option value="GET">GET</option>
+                            <option value="POST" selected>POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                        <input type="text" id="rest-url" value="https://api.empresa.com/v1/productos" class="flex-grow bg-slate-800 text-slate-200 font-mono text-xs px-3 py-2 rounded-lg border border-slate-700 focus:outline-none">
+                        <button onclick="executeRestRequest()" class="w-full md:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play"></i> Enviar HTTP
+                        </button>
+                    </div>
+
+                    <!-- Options & Headers -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left: Payload & Headers -->
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="text-xs font-semibold text-slate-300 mb-2">Cabeceras de la Petición</h4>
+                                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2 text-xs font-mono">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-400">Content-Type:</span>
+                                        <span class="text-emerald-400">application/json</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-slate-400">Accept:</span>
+                                        <span class="text-emerald-400">application/json</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xs font-semibold text-slate-300">Cuerpo de la Petición (JSON Payload)</h4>
+                                    <div class="space-x-2">
+                                        <button onclick="loadRestTemplate('valid')" class="text-[11px] text-emerald-400 hover:underline">JSON Válido</button>
+                                        <button onclick="loadRestTemplate('invalid')" class="text-[11px] text-red-400 hover:underline">JSON Inválido</button>
+                                    </div>
+                                </div>
+                                <textarea id="rest-json-input" rows="12" class="w-full bg-slate-950 text-emerald-300 font-mono text-xs p-4 rounded-xl border border-slate-700 focus:border-emerald-500 focus:outline-none custom-scrollbar leading-relaxed" spellcheck="false"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right: Middleware Validation & Response -->
+                        <div class="space-y-4 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="text-xs font-semibold text-slate-300">Respuesta HTTP del Middleware</h4>
+                                    <span id="rest-status-badge" class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-slate-700 text-slate-300">200 OK</span>
+                                </div>
+                                <div id="rest-response-output" class="bg-slate-950 p-4 rounded-xl border border-slate-700 font-mono text-xs overflow-auto custom-scrollbar h-[280px]">
+                                    <span class="text-slate-500 italic">// Haz clic en "Enviar HTTP" para simular la petición y validación con JSON Schema.</span>
+                                </div>
+                            </div>
+
+                            <!-- JSON Schema Info Panel -->
+                            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 text-xs">
+                                <span class="text-slate-400 font-semibold">Reglas Activas de JSON Schema:</span>
+                                <p class="text-slate-400 mt-1"><code class="text-emerald-400">required</code>: ["nombre", "precio"], <code class="text-emerald-400">precio</code> &gt; 0.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: EJERCICIOS PRÁCTICOS ================= -->
+        <section id="content-exercises" class="tab-content hidden space-y-8">
+            
+            <!-- Header -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-dumbbell text-amber-400"></i>
+                    Retos de Construcción e Inspección de Diagnóstico
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">
+                    Pon a prueba tus habilidades identificando errores sintácticos y estructurando peticiones desde cero.
+                </p>
+            </div>
+
+            <!-- Exercise 1: Structural Builder -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <h3 class="text-base font-bold text-amber-300 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center">1</span>
+                    Constructor de Estructura SOAP
+                </h3>
+                <p class="text-xs text-slate-300">Ordena jerárquicamente las etiquetas obligatorias y opcionales para formar un mensaje SOAP válido:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Blocks to Pick -->
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <span class="text-xs font-semibold text-slate-400">Bloques Disponibles (Haz clic para mover):</span>
+                        <div id="builder-pool" class="flex flex-wrap gap-2 pt-2">
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;/Envelope&gt;</button>
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;soap:Envelope xmlns:soap="..."&gt;</button>
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;soap:Header&gt;...&lt;/soap:Header&gt;</button>
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;/soap:Body&gt;</button>
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;soap:Body&gt;</button>
+                            <button onclick="moveBlock(this, 'builder-target')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs font-mono rounded border border-purple-500/30 transition">&lt;m:ObtenerProducto&gt;...&lt;/m:ObtenerProducto&gt;</button>
+                        </div>
+                    </div>
+
+                    <!-- Target Canvas -->
+                    <div class="bg-slate-950 p-4 rounded-xl border border-dashed border-slate-700 min-h-[140px] flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 block mb-2">Estructura Construida (Orden final):</span>
+                            <div id="builder-target" class="flex flex-col gap-1.5"></div>
+                        </div>
+                        <div class="flex justify-between items-center mt-4 pt-2 border-t border-slate-800">
+                            <button onclick="resetBuilder()" class="text-xs text-slate-400 hover:text-white">Reiniciar</button>
+                            <button onclick="verifyBuilderSOAP()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded shadow transition">Verificar Estructura</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="builder-feedback" class="hidden text-xs p-3 rounded-xl"></div>
+            </div>
+
+            <!-- Exercise 2: Error Inspector (Debugging Challenge) -->
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+                <h3 class="text-base font-bold text-amber-300 flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center">2</span>
+                    Inspector de Errores de Validación (Bug Hunter)
+                </h3>
+                <p class="text-xs text-slate-300">Analiza el fragmento de código JSON/Schema a continuación e identifica qué error de validación causará:</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <span class="text-xs font-semibold text-slate-400">Petición JSON enviada:</span>
+                        <pre class="bg-slate-950 p-4 rounded-xl text-xs text-emerald-300 border border-slate-700"><code>{
+  "id": 102,
+  "nombre": "Teclado Mecánico",
+  "precio": "49.99"
+}</code></pre>
+                        <span class="text-xs font-semibold text-slate-400 block pt-2">Esquema REST requerido:</span>
+                        <pre class="bg-slate-950 p-4 rounded-xl text-xs text-indigo-300 border border-slate-700"><code>"precio": { "type": "number", "minimum": 0 },
+"required": ["id", "nombre", "precio", "stock"]</code></pre>
+                    </div>
+
+                    <div class="space-y-3 flex flex-col justify-center">
+                        <span class="text-xs font-semibold text-slate-300">¿Cuáles son los ERRORES presentes? (Selecciona la respuesta exacta):</span>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-2 text-xs bg-slate-900 p-3 rounded-lg border border-slate-700 cursor-pointer hover:border-slate-500">
+                                <input type="radio" name="bug-option" value="a" class="text-amber-500">
+                                <span>A) Falta la propiedad "id" y el precio debe ser un string.</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-xs bg-slate-900 p-3 rounded-lg border border-slate-700 cursor-pointer hover:border-slate-500">
+                                <input type="radio" name="bug-option" value="b" class="text-amber-500">
+                                <span>B) Falta el campo obligatorio "stock" y el "precio" se envió como string en lugar de número.</span>
+                            </label>
+                            <label class="flex items-center space-x-2 text-xs bg-slate-900 p-3 rounded-lg border border-slate-700 cursor-pointer hover:border-slate-500">
+                                <input type="radio" name="bug-option" value="c" class="text-amber-500">
+                                <span>C) La sintaxis JSON es inválida por comas sobrantes.</span>
+                            </label>
+                        </div>
+                        <button onclick="checkBugHunter()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg transition">
+                            Validar Diagnóstico
+                        </button>
+                        <div id="bug-hunter-feedback" class="hidden text-xs p-3 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: AUTOEVALUACIÓN (10 PREGUNTAS) ================= -->
+        <section id="content-quiz" class="tab-content hidden space-y-6">
+            
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-graduation-cap text-purple-400"></i>
+                        Cuestionario de Autoevaluación
+                    </h2>
+                    <p class="text-xs text-slate-400">Responde a las 10 Preguntas Clave del enunciado de la actividad A3.</p>
+                </div>
+                <div class="bg-slate-900 px-4 py-3 rounded-xl border border-slate-700 flex items-center space-x-4">
+                    <div class="text-center">
+                        <span class="block text-xs text-slate-400">Puntuación</span>
+                        <span id="quiz-score" class="text-lg font-bold text-purple-400">0 / 10</span>
+                    </div>
+                    <button onclick="resetQuiz()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded transition">
+                        Reiniciar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Questions Container -->
+            <div id="quiz-questions-container" class="space-y-6">
+                <!-- Dynamically generated via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-800/60 border-t border-slate-700/60 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>Actividad A3: Servicios Web SOAP y REST &copy; Entorno Educativo Interactivo</span>
+            <span class="font-mono text-slate-400">XML • JSON • WSDL • OpenAPI • XSD</span>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // ================= GLOBAL STATE =================
+        const state = {
+            completedQuiz: new Set(),
+            quizScore: 0,
+            theme: 'dark'
+        };
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            initQuiz();
+            loadSoapTemplate('valid');
+            loadRestTemplate('valid');
+            updateGlobalProgress();
+        });
+
+        // ================= NAVIGATION =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-brand-500', 'text-white', 'bg-slate-700/50');
+                btn.classList.add('border-transparent', 'text-slate-300');
+            });
+
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('border-brand-500', 'text-white', 'bg-slate-700/50');
+            activeBtn.classList.remove('border-transparent');
+        }
+
+        // ================= THEME TOGGLE =================
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = 'fa-solid fa-sun text-amber-400 text-lg';
+            } else {
+                html.classList.add('dark');
+                icon.className = 'fa-solid fa-moon text-lg';
+            }
+        });
+
+        // ================= COMPARISON DETAIL MODAL =================
+        const comparisonDetails = {
+            nature: {
+                title: "Naturaleza: Protocolo vs Estilo Arquitectónico",
+                desc: "SOAP es un protocolo estricto definido formalmente por el W3C con reglas rígidas de mensaje y seguridad. REST no es un protocolo sino un estilo arquitectónico basado en restricciones que aprovecha las capacidades nativas de HTTP."
+            },
+            focus: {
+                title: "Enfoque Principal: RPC vs Recursos",
+                desc: "SOAP enfoca sus mensajes en invocación de procedimientos o métodos remotos (ej: obtenerPrecioProducto()). REST expone directamente recursos conceptuales identificados mediante URIs (ej: /api/productos/123) sobre los que se ejecutan verbos HTTP."
+            },
+            format: {
+                title: "Formatos de Mensaje",
+                desc: "SOAP requiere de manera obligatoria y exclusiva el formato XML encapsulado en su Envelope. REST es agnóstico al formato, aunque JSON se ha consolidado como el estándar de facto por ser ligero y nativo en JavaScript."
+            },
+            transport: {
+                title: "Protocolo de Transporte",
+                desc: "SOAP desacopla la capa de mensaje de la de transporte; puede viajar por HTTP, SMTP, JMS, TCP o WebSockets. REST está diseñado para operar directa y óptimamente sobre HTTP/HTTPS utilizando sus cabeceras y métodos."
+            },
+            contract: {
+                title: "Contratos de Interfaz: WSDL vs OpenAPI",
+                desc: "WSDL es un documento XML que define formalmente todas las operaciones y tipos de un servicio SOAP. OpenAPI (Swagger) es la especificación YAML/JSON estándar para describir APIs RESTful de manera legibles por humanos y máquinas."
+            },
+            validation: {
+                title: "Validación de Esquemas: XSD vs JSON Schema",
+                desc: "XSD valida la estructura, jerarquía, cardinalidad y tipos en XML de SOAP de forma implícita en el servidor. JSON Schema es la especificación para validar campos obligatorios, formatos e intervalos en peticiones REST mediante Middlewares."
+            },
+            state: {
+                title: "Gestión de Estado (Stateful vs Stateless)",
+                desc: "SOAP puede gestionar conversaciones con estado (Stateful) mediante cabeceras WS-Addressing/WS-Security. REST exige rigurosamente ser Stateless: cada petición cliente-servidor debe contener toda la información requerida sin depender de sesiones guardadas en el servidor."
+            }
+        };
+
+        function showComparisonDetail(key) {
+            const data = comparisonDetails[key];
+            if (!data) return;
+            document.getElementById('detail-title').innerText = data.title;
+            document.getElementById('detail-desc').innerText = data.desc;
+            document.getElementById('comparison-detail-box').classList.remove('hidden');
+        }
+
+        // ================= SANDBOX SIMULATOR =================
+        function switchSandboxMode(mode) {
+            const soapBtn = document.getElementById('btn-sandbox-soap');
+            const restBtn = document.getElementById('btn-sandbox-rest');
+            const soapCont = document.getElementById('sandbox-soap-container');
+            const restCont = document.getElementById('sandbox-rest-container');
+
+            if (mode === 'soap') {
+                soapBtn.className = "px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 bg-purple-600 text-white shadow";
+                restBtn.className = "px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white";
+                soapCont.classList.remove('hidden');
+                restCont.classList.add('hidden');
+            } else {
+                restBtn.className = "px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 bg-emerald-600 text-white shadow";
+                soapBtn.className = "px-5 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 text-slate-400 hover:text-white";
+                restCont.classList.remove('hidden');
+                soapCont.classList.add('hidden');
+            }
+        }
+
+        // SOAP Logic Templates
+        const soapValidXml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:prod="http://empresa.com/productos">
+   <soapenv:Header>
+      <prod:AuthToken>XYZ-12345-TOKEN</prod:AuthToken>
+   </soapenv:Header>
+   <soapenv:Body>
+      <prod:ObtenerProductoRequest>
+         <prod:ProductoId>101</prod:ProductoId>
+      </prod:ObtenerProductoRequest>
+   </soapenv:Body>
+</soapenv:Envelope>`;
+
+        const soapInvalidXml = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <!-- Error XSD: Falta la etiqueta obligatoria <prod:ProductoId> y <Header> mal cerrado -->
+   <soapenv:Body>
+      <prod:ObtenerProductoRequest>
+         <prod:CategoriaId>Electrónica</prod:CategoriaId>
+      </prod:ObtenerProductoRequest>
+   </soapenv:Body>
+</soapenv:Envelope>`;
+
+        function loadSoapTemplate(type) {
+            document.getElementById('soap-xml-input').value = type === 'valid' ? soapValidXml : soapInvalidXml;
+        }
+
+        function validateAndSendSOAP() {
+            const xml = document.getElementById('soap-xml-input').value;
+            const badge = document.getElementById('soap-status-badge');
+            const output = document.getElementById('soap-response-output');
+
+            if (!xml.includes('<soapenv:Envelope') && !xml.includes('<Envelope')) {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30";
+                badge.innerText = "500 Internal Server Fault";
+                output.innerHTML = `<pre class="text-red-400">&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"&gt;
+   &lt;soap:Body&gt;
+      &lt;soap:Fault&gt;
+         &lt;faultcode&gt;soap:Client&lt;/faultcode&gt;
+         &lt;faultstring&gt;Error de sintaxis: Falta el elemento raíz obligatory &lt;Envelope&gt;.&lt;/faultstring&gt;
+      &lt;/soap:Fault&gt;
+   &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</pre>`;
+                return;
+            }
+
+            if (!xml.includes('<prod:ProductoId>') && !xml.includes('<ProductoId>')) {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30";
+                badge.innerText = "500 Schema Validation Fault";
+                output.innerHTML = `<pre class="text-red-400">&lt;soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"&gt;
+   &lt;soap:Body&gt;
+      &lt;soap:Fault&gt;
+         &lt;faultcode&gt;soap:Server&lt;/faultcode&gt;
+         &lt;faultstring&gt;XSD Schema Error: El elemento &lt;prod:ProductoId&gt; es requerido (minOccurs=1) dentro de &lt;ObtenerProductoRequest&gt;.&lt;/faultstring&gt;
+         &lt;detail&gt;
+            &lt;xsdError&gt;CVC-COMPLEX-TYPE.2.4.a: Invalid content starting with element 'CategoriaId'.&lt;/xsdError&gt;
+         &lt;/detail&gt;
+      &lt;/soap:Fault&gt;
+   &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</pre>`;
+            } else {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badge.innerText = "200 OK (SOAP Success)";
+                output.innerHTML = `<pre class="text-purple-300">&lt;soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"&gt;
+   &lt;soapenv:Body&gt;
+      &lt;prod:ObtenerProductoResponse xmlns:prod="http://empresa.com/productos"&gt;
+         &lt;prod:Producto&gt;
+            &lt;prod:Id&gt;101&lt;/prod:Id&gt;
+            &lt;prod:Nombre&gt;Servidor Blade Dell&lt;/prod:Nombre&gt;
+            &lt;prod:Precio currency="EUR"&gt;2499.00&lt;/prod:Precio&gt;
+            &lt;prod:Stock&gt;12&lt;/prod:Stock&gt;
+         &lt;/prod:Producto&gt;
+      &lt;/prod:ObtenerProductoResponse&gt;
+   &lt;/soapenv:Body&gt;
+&lt;/soapenv:Envelope&gt;</pre>`;
+            }
+        }
+
+        // REST Logic Templates
+        const restValidJson = `{
+  "nombre": "Monitor Gaming 4K",
+  "precio": 389.99,
+  "categoria": "Hardware"
+}`;
+
+        const restInvalidJson = `{
+  "precio": -15.00
+  // Error: Falta campo 'nombre' y 'precio' es negativo
+}`;
+
+        function loadRestTemplate(type) {
+            document.getElementById('rest-json-input').value = type === 'valid' ? restValidJson : restInvalidJson;
+        }
+
+        function executeRestRequest() {
+            const jsonText = document.getElementById('rest-json-input').value;
+            const method = document.getElementById('rest-method').value;
+            const badge = document.getElementById('rest-status-badge');
+            const output = document.getElementById('rest-response-output');
+
+            let parsed;
+            try {
+                parsed = JSON.parse(jsonText);
+            } catch (e) {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30";
+                badge.innerText = "400 Bad Request (Malformed JSON)";
+                output.innerHTML = `<pre class="text-red-400">{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Sintaxis JSON inválida. No se pudo realizar el parse del cuerpo de la petición.",
+  "timestamp": "${new Date().toISOString()}"
+}</pre>`;
+                return;
+            }
+
+            if (method === 'POST' || method === 'PUT') {
+                if (!parsed.nombre || typeof parsed.precio !== 'number' || parsed.precio <= 0) {
+                    badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30";
+                    badge.innerText = "400 Bad Request (Validation Failed)";
+                    output.innerHTML = `<pre class="text-amber-400">{
+  "type": "https://api.empresa.com/errors/validation-error",
+  "title": "Error de Validación en JSON Schema",
+  "status": 400,
+  "invalid_params": [
+    ${!parsed.nombre ? '{"field": "nombre", "reason": "El campo obligatorio \'nombre\' no está presente"}' : ''}
+    ${parsed.precio <= 0 ? '{"field": "precio", "reason": "El valor del precio debe ser superior a 0"}' : ''}
+  ]
+}</pre>`;
+                } else {
+                    const statusText = method === 'POST' ? '201 Created' : '200 OK';
+                    const statusCode = method === 'POST' ? '201 Created' : '200 OK';
+                    badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    badge.innerText = statusCode;
+                    output.innerHTML = `<pre class="text-emerald-300">{
+  "id": ${Math.floor(Math.random() * 9000) + 1000},
+  "nombre": "${parsed.nombre}",
+  "precio": ${parsed.precio},
+  "categoria": "${parsed.categoria || 'General'}",
+  "creadoEn": "${new Date().toISOString()}"
+}</pre>`;
+                }
+            } else if (method === 'GET') {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badge.innerText = "200 OK";
+                output.innerHTML = `<pre class="text-emerald-300">[
+  { "id": 1, "nombre": "Teclado RGB", "precio": 59.99 },
+  { "id": 2, "nombre": "Ratón Óptico", "precio": 25.50 }
+]</pre>`;
+            } else if (method === 'DELETE') {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badge.innerText = "204 No Content";
+                output.innerHTML = `<span class="text-slate-400 italic">// 204 No Content: Recurso eliminado con éxito. Cuerpo vacío.</span>`;
+            } else {
+                badge.className = "px-2.5 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badge.innerText = "200 OK";
+                output.innerHTML = `<pre class="text-emerald-300">{ "mensaje": "Recurso actualizado parcialmente con PATCH" }</pre>`;
+            }
+        }
+
+        // ================= EXERCISES LOGIC =================
+        function moveBlock(btn, targetId) {
+            const target = document.getElementById(targetId);
+            const pool = document.getElementById('builder-pool');
+            if (btn.parentElement.id === 'builder-pool') {
+                target.appendChild(btn);
+            } else {
+                pool.appendChild(btn);
+            }
+        }
+
+        function resetBuilder() {
+            const pool = document.getElementById('builder-pool');
+            const target = document.getElementById('builder-target');
+            while (target.firstChild) {
+                pool.appendChild(target.firstChild);
+            }
+            document.getElementById('builder-feedback').className = "hidden text-xs p-3 rounded-xl";
+        }
+
+        function verifyBuilderSOAP() {
+            const target = document.getElementById('builder-target');
+            const items = Array.from(target.children).map(c => c.innerText.trim());
+            const feedback = document.getElementById('builder-feedback');
+
+            const correctOrder = [
+                '<soap:Envelope xmlns:soap="...">',
+                '<soap:Header>...</soap:Header>',
+                '<soap:Body>',
+                '<m:ObtenerProducto>...</m:ObtenerProducto>',
+                '</soap:Body>',
+                '</Envelope>'
+            ];
+
+            const isCorrect = items.length === correctOrder.length && items.every((val, idx) => val === correctOrder[idx]);
+
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.className = "text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium";
+                feedback.innerHTML = "<i class='fa-solid fa-circle-check'></i> ¡Excelente! Has estructurado la petición SOAP respetando el orden oficial de Envelope -> Header -> Body -> Payload -> Cierres.";
+            } else {
+                feedback.className = "text-xs p-3 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-medium";
+                feedback.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> La estructura es incorrecta. Recuerda: 1. Apertura Envelope, 2. Header (opcional), 3. Apertura Body, 4. Contenido, 5. Cierre Body, 6. Cierre Envelope.";
+            }
+        }
+
+        function checkBugHunter() {
+            const selected = document.querySelector('input[name="bug-option"]:checked');
+            const feedback = document.getElementById('bug-hunter-feedback');
+            feedback.classList.remove('hidden');
+
+            if (selected && selected.value === 'b') {
+                feedback.className = "text-xs p-3 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium";
+                feedback.innerHTML = "<i class='fa-solid fa-circle-check'></i> ¡Correcto! Falta la propiedad declarada en 'required' (\"stock\") y \"precio\" fue enviado como string \"49.99\" en lugar de tipo número sin comillas.";
+            } else {
+                feedback.className = "text-xs p-3 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 font-medium";
+                feedback.innerHTML = "<i class='fa-solid fa-circle-xmark'></i> Opción incorrecta. Examina detalladamente el esquema: exige el tipo 'number' para precio y la clave 'stock' dentro del array de obligatorios 'required'.";
+            }
+        }
+
+        // ================= QUIZ QUESTIONS DATA =================
+        const quizData = [
+            {
+                q: "1. ¿Qué sucede si un cliente envía un elemento XML que no está definido en el archivo XSD asociado al WSDL de un servicio SOAP?",
+                options: [
+                    "A) El servidor ignora silenciosamente la etiqueta sobrante y procesa la petición.",
+                    "B) El motor SOAP intercepta la petición, la rechaza en la capa de validación y devuelve una respuesta de error <soap:Fault> sin ejecutar la lógica de negocio.",
+                    "C) La petición se convierte automáticamente a formato JSON Schema para reintentar la conexión.",
+                    "D) El servidor HTTP devuelve un código de estado 404 Not Found."
+                ],
+                correct: 1,
+                explanation: "En SOAP, la vinculación es directa e implícita. El motor SOAP valida el XML contra el XSD del WSDL antes de procesarlo. Si viola la regla del esquema, devuelve un <soap:Fault>."
+            },
+            {
+                q: "2. Si estás diseñando una API RESTful para gestionar un inventario, ¿qué método HTTP y qué código de estado utilizarías para crear un nuevo producto y confirmar su creación?",
+                options: [
+                    "A) Método PUT y código de estado 200 OK.",
+                    "B) Método POST y código de estado 201 Created.",
+                    "C) Método POST y código de estado 202 Accepted.",
+                    "D) Método PATCH y código de estado 204 No Content."
+                ],
+                correct: 1,
+                explanation: "El método POST se emplea para la creación de nuevos recursos en el servidor, y el código de respuesta semántico estándar de éxito en la creación es 201 Created."
+            },
+            {
+                q: "3. ¿Cuál es la diferencia conceptual entre la etiqueta <types> de un WSDL y la sección components/schemas de OpenAPI?",
+                options: [
+                    "A) <types> define los datos en XML Schema (XSD) para SOAP, mientras que components/schemas define modelos reutilizables en JSON Schema para REST.",
+                    "B) <types> solo admite enteros y texto, mientras que components/schemas admite binarios.",
+                    "C) No existe diferencia; ambas son exactamente la misma tecnología pero en distinto puerto.",
+                    "D) <types> es opcional en WSDL mientras que components/schemas es obligatorio en OpenAPI."
+                ],
+                correct: 0,
+                explanation: "<types> encapsula las definiciones de esquemas XSD empleadas por SOAP. En REST (OpenAPI), los modelos de datos compartidos se especifican bajo components/schemas usando sintaxis JSON Schema."
+            },
+            {
+                q: "4. ¿Por qué REST no requiere de un canal de transporte distinto a HTTP mientras que SOAP sí puede utilizar otros como SMTP o JMS?",
+                options: [
+                    "A) Porque REST utiliza internamente sockets TCP de bajo nivel directamente.",
+                    "B) Porque REST se diseñó explícitamente acoplado a la semántica del protocolo HTTP (métodos, cabeceras, códigos de estado), mientras que SOAP encapsula la lógica en el Envelope, siendo independiente del medio de transporte.",
+                    "C) Porque SOAP es un estándar más antiguo y no soporta conexiones web modernas.",
+                    "D) Porque los servidores SMTP no permiten procesar estructuras en JSON."
+                ],
+                correct: 1,
+                explanation: "SOAP es independiente del transporte porque toda su semántica de aplicación viaja en el <Envelope>. REST aprovecha nativamente la arquitectura del protocolo HTTP/S."
+            },
+            {
+                q: "5. Indica qué cabeceras HTTP son imprescindibles para que un cliente REST comunique que envía un cuerpo JSON y espera recibir JSON como respuesta:",
+                options: [
+                    "A) Content-Type: text/xml y Accept: text/html",
+                    "B) Authorization: Bearer token y Content-Type: application/json",
+                    "C) Content-Type: application/json y Accept: application/json",
+                    "D) Host: api.com y Connection: keep-alive"
+                ],
+                correct: 2,
+                explanation: "Content-Type indica al servidor el formato del cuerpo enviado (application/json), y Accept le indica al servidor el formato deseado en la respuesta."
+            },
+            {
+                q: "6. ¿Cuál es la función del elemento <Header> en un mensaje SOAP y qué tipo de información se suele incluir en él?",
+                options: [
+                    "A) Contener el payload principal de la llamada de negocio.",
+                    "B) Es un elemento opcional destinado a metadatos de control (autenticación, firmas WS-Security, enrutamiento, transacciones) independientes del cuerpo principal.",
+                    "C) Almacenar únicamente el código de error en caso de fallo del servidor.",
+                    "D) Indicar la dirección URL IP física del cliente."
+                ],
+                correct: 1,
+                explanation: "El <Header> SOAP contiene metadatos de infraestructura o contexto (como tokens de autenticación o identificadores de transacción) sin mezclar esa información con los datos de negocio del <Body>."
+            },
+            {
+                q: "7. Explica la diferencia entre los métodos HTTP PUT y PATCH al actualizar un recurso en una API REST:",
+                options: [
+                    "A) PUT realiza una actualización parcial y PATCH borra el recurso anterior.",
+                    "B) PUT reemplaza por completo la entidad especificada; PATCH aplica una modificación o actualización parcial sobre los campos enviados.",
+                    "C) PUT solo funciona con XML y PATCH con JSON.",
+                    "D) Ninguna; ambos métodos son idénticos e intercambiables según el estándar HTTP."
+                ],
+                correct: 1,
+                explanation: "PUT requiere enviar la representación completa del recurso para sustituirlo totalmente. PATCH permite modificar únicamente determinados atributos específicos."
+            },
+            {
+                q: "8. ¿Qué es el elemento <Fault> dentro de una estructura SOAP y en qué sección del mensaje debe aparecer?",
+                options: [
+                    "A) Es un elemento de cabecera que sustituye al <Header>.",
+                    "B) Es el elemento estándar de notificación de errores y DEBE aparecer como hijo directo del elemento <Body> en caso de fallo.",
+                    "C) Es un archivo externo que se descarga mediante una URL suplementaria.",
+                    "D) Es una etiqueta para depuración que solo se muestra en modo desarrollo dentro del <Envelope>."
+                ],
+                correct: 1,
+                explanation: "En SOAP, cuando ocurre un error de procesamiento o validación, la respuesta debe contener un elemento <Fault> situado estrictamente como hijo dentro del <Body>."
+            },
+            {
+                q: "9. ¿Cómo se maneja la validación de un documento JSON en REST en comparación con la validación de un documento XML mediante XSD en SOAP?",
+                options: [
+                    "A) En SOAP se procesa directamente mediante Middlewares externos, mientras que en REST la validación se realiza a nivel del procesador interno del navegador.",
+                    "B) En SOAP la validación es directa mediante la infraestructura del motor que evalúa el XML contra el XSD referenciado por Namespaces. En REST, la validación la realiza habitualmente un Middleware de la aplicación evaluando el cuerpo contra un JSON Schema.",
+                    "C) JSON no se puede validar mediante esquemas; solo admite validación por código manual en el controlador.",
+                    "D) Ambas se ejecutan en la base de datos de forma idéntica."
+                ],
+                correct: 1,
+                explanation: "SOAP realiza una validación implícita en su motor a través del espacio de nombres XSD. REST desacopla la validación delegándola a middlewares o capas intermedias que validan contra JSON Schema."
+            },
+            {
+                q: "10. ¿Qué significa que un servicio REST sea stateless (sin estado) y qué impacto tiene esto en la escalabilidad del sistema?",
+                options: [
+                    "A) Significa que no requiere base de datos, lo que hace la aplicación totalmente estática.",
+                    "B) Significa que el servidor no almacena información de sesión entre peticiones del cliente; cada petición contiene toda la información necesaria, permitiendo distribuir las peticiones entre cualquier nodo del servidor facilitando la escalabilidad horizontal.",
+                    "C) Significa que la API solo está activa durante el horario laboral.",
+                    "D) Dificulta la escalabilidad al requerir sincronización continua de sesiones en memoria RAM."
+                ],
+                correct: 1,
+                explanation: "Al no guardar estado de sesión en el servidor (Stateless), cualquier servidor de un clúster puede responder a cualquier petición entrante, permitiendo escalar el sistema de forma masiva e independiente."
+            }
+        ];
+
+        function initQuiz() {
+            const container = document.getElementById('quiz-questions-container');
+            container.innerHTML = '';
+
+            quizData.forEach((qItem, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl space-y-4";
+                card.id = `quiz-card-${idx}`;
+
+                let optionsHtml = '';
+                qItem.options.forEach((opt, optIdx) => {
+                    optionsHtml += `
+                        <button onclick="answerQuestion(${idx}, ${optIdx})" id="q-${idx}-opt-${optIdx}" class="w-full text-left p-3.5 rounded-xl border border-slate-700 bg-slate-900/80 text-xs text-slate-200 hover:bg-slate-750 transition flex items-start space-x-2">
+                            <span>${opt}</span>
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <h3 class="font-semibold text-sm text-white">${qItem.q}</h3>
+                        <span id="badge-q-${idx}" class="hidden px-2.5 py-0.5 rounded text-[10px] font-bold"></span>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                        ${optionsHtml}
+                    </div>
+                    <div id="explanation-${idx}" class="hidden text-xs p-3.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 leading-relaxed">
+                        <strong class="text-purple-400 block mb-1"><i class="fa-solid fa-circle-info"></i> Explicación detallada:</strong>
+                        ${qItem.explanation}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function answerQuestion(qIdx, selectedOpt) {
+            if (state.completedQuiz.has(qIdx)) return; // Prevent re-answering
+
+            state.completedQuiz.add(qIdx);
+            const qData = quizData[qIdx];
+            const isCorrect = selectedOpt === qData.correct;
+            const badge = document.getElementById(`badge-q-${qIdx}`);
+            const exp = document.getElementById(`explanation-${qIdx}`);
+
+            // Style buttons
+            qData.options.forEach((_, optIdx) => {
+                const btn = document.getElementById(`q-${qIdx}-opt-${optIdx}`);
+                btn.disabled = true;
+                if (optIdx === qData.correct) {
+                    btn.className = "w-full text-left p-3.5 rounded-xl border border-emerald-500/50 bg-emerald-500/10 text-xs text-emerald-300 font-semibold flex items-start space-x-2";
+                } else if (optIdx === selectedOpt && !isCorrect) {
+                    btn.className = "w-full text-left p-3.5 rounded-xl border border-red-500/50 bg-red-500/10 text-xs text-red-300 font-semibold flex items-start space-x-2";
+                }
+            });
+
+            // Badge & Score
+            badge.classList.remove('hidden');
+            if (isCorrect) {
+                badge.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                badge.innerText = "¡Correcto!";
+                state.quizScore += 1;
+            } else {
+                badge.className = "px-2.5 py-0.5 rounded text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30";
+                badge.innerText = "Incorrecto";
+            }
+
+            exp.classList.remove('hidden');
+            document.getElementById('quiz-score').innerText = `${state.quizScore} / 10`;
+            updateGlobalProgress();
+        }
+
+        function resetQuiz() {
+            state.completedQuiz.clear();
+            state.quizScore = 0;
+            document.getElementById('quiz-score').innerText = `0 / 10`;
+            initQuiz();
+            updateGlobalProgress();
+        }
+
+        function updateGlobalProgress() {
+            const totalQuestions = quizData.length;
+            const answered = state.completedQuiz.size;
+            const percentage = Math.round((answered / totalQuestions) * 100);
+            document.getElementById('global-progress').style.width = `${percentage}%`;
+        }
+    </script>
+</body>
+</html>
